@@ -1,7 +1,8 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import type { Expense, SplitModeName } from "@/lib/db";
+import { suggestCategory } from "@/lib/autoCategory";
 import { computeSplit, distribute, type SplitInput } from "@/lib/split";
 import { formatMoney, parseMoney } from "@/lib/money";
 import { deleteExpenseLocal, saveExpenseLocal } from "@/lib/sync";
@@ -60,6 +61,8 @@ export function ExpenseSheet({
   const [date, setDate] = useState(toLocalInput(existing?.spent_at ?? new Date().toISOString()));
   const [mode, setMode] = useState<SplitModeName>(existing?.split_mode ?? "shares");
   const [saving, setSaving] = useState(false);
+  // the category was picked by hand: never overwrite it with a guess
+  const pickedByHand = useRef(!!existing?.category_id);
 
   const [included, setIncluded] = useState<Set<string>>(
     new Set(existing ? existing.shares.filter((s) => s.cents > 0 || existing.shares.length === 1).map((s) => s.memberId) : data.members.map((m) => m.id)),
@@ -101,6 +104,13 @@ export function ExpenseSheet({
     const nextIds = data.members.map((m) => m.id).filter((x) => next.has(x));
     setVals(equalValues(mode, nextIds, total));
     setDirty(false);
+  };
+
+  /** When leaving the subject field, tag the expense from its description (own history first, then keywords). */
+  const autoCategory = () => {
+    if (pickedByHand.current) return;
+    const guess = suggestCategory(title, data.categories, data.expenses.filter((e) => !e.is_transfer && e.id !== existing?.id));
+    if (guess) setCategoryId(guess);
   };
 
   const onAmount = (v: string) => {
@@ -159,7 +169,7 @@ export function ExpenseSheet({
       <div className="space-y-3 px-4 py-3">
         {/* subject + amount on one row */}
         <div className="flex items-center gap-2">
-          <input value={title} onChange={(e) => setTitle(e.target.value)} placeholder={t("What was it for?")} aria-label={t("Subject")} className="min-w-0 flex-1 rounded-xl bg-surface2 px-3 py-2.5 text-base outline-none placeholder:text-white/30" />
+          <input value={title} onChange={(e) => setTitle(e.target.value)} onBlur={autoCategory} placeholder={t("What was it for?")} aria-label={t("Subject")} className="min-w-0 flex-1 rounded-xl bg-surface2 px-3 py-2.5 text-base outline-none placeholder:text-white/30" />
           <label className="flex w-[6.25rem] shrink-0 items-center rounded-xl bg-surface2 px-2.5 py-2.5">
             <input value={amountStr} onChange={(e) => onAmount(e.target.value)} inputMode="decimal" placeholder="0,00" aria-label={t("Amount ({currency})", { currency })} className="w-full min-w-0 bg-transparent text-right text-base font-semibold tabular-nums text-owe outline-none placeholder:text-white/20" />
             <span className="ml-1 text-sm text-muted">{currencySymbol}</span>
@@ -169,7 +179,7 @@ export function ExpenseSheet({
         {/* one row of categories that scrolls sideways, to save vertical space */}
         <div className="no-scrollbar -mx-4 flex gap-1.5 overflow-x-auto px-4">
           {data.categories.map((c) => (
-            <button key={c.id} onClick={() => setCategoryId(categoryId === c.id ? null : c.id)} className={`shrink-0 whitespace-nowrap rounded-full px-3 py-1.5 text-sm ${categoryId === c.id ? "bg-accent text-black" : "bg-surface2"}`}>
+            <button key={c.id} onClick={() => { pickedByHand.current = true; setCategoryId(categoryId === c.id ? null : c.id); }} className={`shrink-0 whitespace-nowrap rounded-full px-3 py-1.5 text-sm ${categoryId === c.id ? "bg-accent text-black" : "bg-surface2"}`}>
               {c.emoji} {c.name}
             </button>
           ))}
