@@ -8,11 +8,14 @@ export function Sheet({
   title,
   onClose,
   right,
+  footer,
   children,
 }: {
   title: string;
   onClose: () => void;
   right?: React.ReactNode;
+  /** Pinned under the scrolling content, so a primary action is always on screen. */
+  footer?: React.ReactNode;
   children: React.ReactNode;
 }) {
   const { t } = useT();
@@ -24,19 +27,20 @@ export function Sheet({
     };
   }, []);
   return (
-    <div className="fixed inset-0 z-40 flex flex-col bg-black/60 pt-10" onClick={onClose}>
+    <div className="fixed inset-0 z-40 flex flex-col bg-black/60 pt-6" onClick={onClose}>
       <div
         className="safe-bottom mt-auto flex max-h-full min-h-[60%] w-full flex-col overflow-hidden rounded-t-[2rem] bg-surface"
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="flex items-center justify-between border-b border-white/10 px-4 py-4">
-          <button onClick={onClose} aria-label={t("Close")} className="h-9 w-9 rounded-full bg-surface2 text-lg">
+        <div className="flex items-center justify-between border-b border-white/10 px-4 py-2.5">
+          <button onClick={onClose} aria-label={t("Close")} className="h-8 w-8 rounded-full bg-surface2 text-base">
             ✕
           </button>
           <h2 className="text-lg font-medium">{title}</h2>
-          <div className="min-w-9 text-right">{right}</div>
+          <div className="flex min-w-8 justify-end">{right}</div>
         </div>
         <div className="flex-1 overflow-y-auto">{children}</div>
+        {footer && <div className="border-t border-white/10 bg-surface">{footer}</div>}
       </div>
     </div>
   );

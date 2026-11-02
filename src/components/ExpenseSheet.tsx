@@ -7,7 +7,7 @@ import { formatMoney, parseMoney } from "@/lib/money";
 import { deleteExpenseLocal, saveExpenseLocal } from "@/lib/sync";
 import { useT } from "@/lib/i18n";
 import type { useGroup } from "@/lib/useGroup";
-import { Avatar, PrimaryButton, SectionTitle, Sheet } from "./ui";
+import { Avatar, PrimaryButton, Sheet } from "./ui";
 
 type GroupData = NonNullable<ReturnType<typeof useGroup>>;
 
@@ -137,81 +137,99 @@ export function ExpenseSheet({
 
   const centsFor = (id: string) => (result.ok ? result.shares.find((s) => s.memberId === id)?.cents : undefined);
 
+  const currencySymbol = new Intl.NumberFormat(lang, { style: "currency", currency }).formatToParts(0).find((p) => p.type === "currency")?.value ?? currency;
+
   return (
-    <Sheet title={t("Expense details")} onClose={onClose}>
-      <SectionTitle>{t("Subject")}</SectionTitle>
-      <div className="bg-surface px-4 py-3">
-        <input value={title} onChange={(e) => setTitle(e.target.value)} placeholder={t("What was it for?")} className="w-full bg-transparent text-xl outline-none placeholder:text-white/30" />
-      </div>
-      <div className="no-scrollbar flex gap-2 overflow-x-auto bg-surface px-4 pb-3">
-        {data.categories.map((c) => (
-          <button key={c.id} onClick={() => setCategoryId(categoryId === c.id ? null : c.id)} className={`whitespace-nowrap rounded-full px-3 py-1.5 text-sm ${categoryId === c.id ? "bg-accent text-black" : "bg-surface2"}`}>
-            {c.emoji} {c.name}
+    <Sheet
+      title={t("Expense details")}
+      onClose={onClose}
+      right={
+        existing && (
+          <button onClick={remove} aria-label={t("Delete expense")} className="h-8 w-8 rounded-full bg-surface2 text-base">
+            🗑️
           </button>
-        ))}
-      </div>
+        )
+      }
+      footer={
+        <div className="px-4 pb-1 pt-2.5">
+          <PrimaryButton onClick={save} disabled={!canSave} className="!py-3">{t("Save")}</PrimaryButton>
+        </div>
+      }
+    >
+      <div className="space-y-3 px-4 py-3">
+        {/* subject + amount on one row */}
+        <div className="flex items-center gap-2">
+          <input value={title} onChange={(e) => setTitle(e.target.value)} placeholder={t("What was it for?")} aria-label={t("Subject")} className="min-w-0 flex-1 rounded-xl bg-surface2 px-3 py-2.5 text-base outline-none placeholder:text-white/30" />
+          <label className="flex w-32 items-center rounded-xl bg-surface2 px-3 py-2.5">
+            <input value={amountStr} onChange={(e) => onAmount(e.target.value)} inputMode="decimal" placeholder="0,00" aria-label={t("Amount ({currency})", { currency })} className="w-full min-w-0 bg-transparent text-right text-lg font-semibold text-owe outline-none placeholder:text-white/20" />
+            <span className="ml-1 text-sm text-muted">{currencySymbol}</span>
+          </label>
+        </div>
 
-      <SectionTitle>{t("Amount ({currency})", { currency })}</SectionTitle>
-      <div className="bg-surface px-4 py-3">
-        <input value={amountStr} onChange={(e) => onAmount(e.target.value)} inputMode="decimal" placeholder="0,00" className="w-full bg-transparent text-3xl font-semibold text-owe outline-none placeholder:text-white/20" />
-      </div>
-
-      <SectionTitle>{t("Who paid")}</SectionTitle>
-      <div className="no-scrollbar flex gap-3 overflow-x-auto bg-surface px-4 py-3">
-        {data.members.map((m) => (
-          <button key={m.id} onClick={() => setPaidBy(m.id)} className={`flex items-center gap-2 rounded-full py-1 pl-1 pr-3 ${paidBy === m.id ? "bg-accent text-black" : "bg-surface2"}`}>
-            <Avatar member={m} size={28} /> {m.name}
-          </button>
-        ))}
-      </div>
-
-      <SectionTitle>{t("For whom")}</SectionTitle>
-      <div className="bg-surface px-4 pb-2 pt-3">
-        <div className="mb-3 grid grid-cols-3 rounded-xl bg-surface2 p-1">
-          {MODES.map((m) => (
-            <button key={m.id} onClick={() => changeMode(m.id)} className={`rounded-lg py-1.5 text-sm font-medium ${mode === m.id ? "bg-accent text-black" : "text-accent"}`}>
-              {t(m.label)}
+        {/* one row of categories that scrolls sideways, to save vertical space */}
+        <div className="no-scrollbar -mx-4 flex gap-1.5 overflow-x-auto px-4">
+          {data.categories.map((c) => (
+            <button key={c.id} onClick={() => setCategoryId(categoryId === c.id ? null : c.id)} className={`shrink-0 whitespace-nowrap rounded-full px-3 py-1.5 text-sm ${categoryId === c.id ? "bg-accent text-black" : "bg-surface2"}`}>
+              {c.emoji} {c.name}
             </button>
           ))}
         </div>
-        {data.members.map((m) => {
-          const on = included.has(m.id);
-          const c = centsFor(m.id);
-          return (
-            <div key={m.id} className="flex items-center gap-3 border-b border-white/10 py-2.5 last:border-0">
-              <button onClick={() => toggle(m.id)} className={`flex h-6 w-6 items-center justify-center rounded-full border ${on ? "border-accent bg-accent text-black" : "border-white/30"}`} aria-label={t("Include {name}", { name: m.name })}>
-                {on && "✓"}
+
+        <div>
+          <div className="mb-1 text-xs text-muted">{t("Who paid")}</div>
+          <div className="flex flex-wrap gap-1.5">
+            {data.members.map((m) => (
+              <button key={m.id} onClick={() => setPaidBy(m.id)} className={`flex items-center gap-1.5 rounded-full py-0.5 pl-0.5 pr-3 text-sm ${paidBy === m.id ? "bg-accent text-black" : "bg-surface2"}`}>
+                <Avatar member={m} size={24} /> {m.name}
               </button>
-              <Avatar member={m} size={32} />
-              <div className="flex-1">
-                <div className={on ? "" : "text-white/40"}>{m.name}</div>
-                {on && c !== undefined && mode !== "amounts" && <div className="text-xs text-muted">{formatMoney(c, currency, lang)}</div>}
-              </div>
-              {on && (
-                <div className="flex items-center gap-1 text-owe">
-                  <input
-                    value={vals[m.id] ?? ""}
-                    onChange={(e) => { setVals({ ...vals, [m.id]: e.target.value }); setDirty(true); }}
-                    inputMode="decimal"
-                    className="w-20 rounded-lg bg-surface2 px-2 py-1 text-right font-semibold outline-none"
-                  />
-                  <span className="w-6 text-sm text-muted">{mode === "percent" ? "%" : mode === "amounts" ? "" : "×"}</span>
+            ))}
+          </div>
+        </div>
+
+        <div>
+          <div className="mb-1 text-xs text-muted">{t("For whom")}</div>
+          <div className="mb-1 grid grid-cols-3 rounded-xl bg-surface2 p-0.5">
+            {MODES.map((m) => (
+              <button key={m.id} onClick={() => changeMode(m.id)} className={`rounded-[10px] py-1 text-sm font-medium ${mode === m.id ? "bg-accent text-black" : "text-accent"}`}>
+                {t(m.label)}
+              </button>
+            ))}
+          </div>
+          {data.members.map((m) => {
+            const on = included.has(m.id);
+            const c = centsFor(m.id);
+            return (
+              <div key={m.id} className="flex items-center gap-2.5 border-b border-white/10 py-1.5 last:border-0">
+                <button onClick={() => toggle(m.id)} className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-full border text-sm ${on ? "border-accent bg-accent text-black" : "border-white/30"}`} aria-label={t("Include {name}", { name: m.name })}>
+                  {on && "✓"}
+                </button>
+                <Avatar member={m} size={28} />
+                <div className={`min-w-0 flex-1 truncate ${on ? "" : "text-white/40"}`}>
+                  {m.name}
+                  {on && c !== undefined && mode !== "amounts" && <span className="ml-1.5 text-xs text-muted">{formatMoney(c, currency, lang)}</span>}
                 </div>
-              )}
-            </div>
-          );
-        })}
-        {!result.ok && total > 0 && <p className="py-2 text-sm text-bad">{t(result.error)}</p>}
-      </div>
+                {on && (
+                  <div className="flex items-center gap-1 text-owe">
+                    <input
+                      value={vals[m.id] ?? ""}
+                      onChange={(e) => { setVals({ ...vals, [m.id]: e.target.value }); setDirty(true); }}
+                      inputMode="decimal"
+                      aria-label={m.name}
+                      className="w-[4.5rem] rounded-lg bg-surface2 px-2 py-1 text-right text-base font-semibold outline-none"
+                    />
+                    <span className="w-4 text-sm text-muted">{mode === "percent" ? "%" : mode === "amounts" ? "" : "×"}</span>
+                  </div>
+                )}
+              </div>
+            );
+          })}
+          {!result.ok && total > 0 && <p className="pt-1 text-sm text-bad">{t(result.error)}</p>}
+        </div>
 
-      <SectionTitle>{t("Date and time")}</SectionTitle>
-      <div className="bg-surface px-4 py-3">
-        <input type="datetime-local" value={date} onChange={(e) => setDate(e.target.value)} className="w-full rounded-lg bg-surface2 px-3 py-2 outline-none [color-scheme:dark]" />
-      </div>
-
-      <div className="space-y-3 p-4">
-        <PrimaryButton onClick={save} disabled={!canSave}>{t("Save")}</PrimaryButton>
-        {existing && <button onClick={remove} className="w-full py-2 text-bad">{t("Delete expense")}</button>}
+        <label className="flex items-center justify-between gap-3">
+          <span className="text-xs text-muted">{t("Date and time")}</span>
+          <input type="datetime-local" value={date} onChange={(e) => setDate(e.target.value)} className="rounded-lg bg-surface2 px-2 py-1.5 text-base outline-none [color-scheme:dark]" />
+        </label>
       </div>
     </Sheet>
   );
