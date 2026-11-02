@@ -16,7 +16,7 @@ export default function JoinPage() {
   const router = useRouter();
   const { session, loading } = useAuth();
   const [preview, setPreview] = useState<Preview | null | undefined>(undefined);
-  const [unclaimed, setUnclaimed] = useState<Unclaimed[]>([]);
+  const [unclaimed, setUnclaimed] = useState<Unclaimed[] | undefined>(undefined);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -46,7 +46,7 @@ export default function JoinPage() {
 
   return (
     <main className="safe-top flex min-h-dvh flex-col items-center justify-center bg-header px-8 text-center">
-      {preview === undefined ? (
+      {preview === undefined || (preview !== null && unclaimed === undefined) ? (
         <p className="text-muted">{t("Loading invite…")}</p>
       ) : preview === null ? (
         <p>{t("This invite link is not valid anymore.")}</p>
@@ -55,10 +55,10 @@ export default function JoinPage() {
           <p className="text-muted">{t("You've been invited to")}</p>
           <h1 className="mt-1 text-3xl font-bold">{preview.name}</h1>
           <p className="mt-1 text-sm text-muted">{t("{n} member(s)", { n: preview.member_count })}</p>
-          {unclaimed.length > 0 && (
+          {(unclaimed ?? []).length > 0 && (
             <div className="mt-8 w-full max-w-xs">
               <p className="mb-2 text-sm text-muted">{t("Are you one of these people?")}</p>
-              {unclaimed.map((m) => (
+              {(unclaimed ?? []).map((m) => (
                 <button
                   key={m.id}
                   disabled={busy}
@@ -75,7 +75,7 @@ export default function JoinPage() {
             onClick={() => join(null)}
             className="mt-6 w-full max-w-xs rounded-full bg-accent py-3.5 font-semibold text-black active:opacity-80"
           >
-            {unclaimed.length ? t("Join as a new member") : t("Join group")}
+            {(unclaimed ?? []).length ? t("Join as a new member") : t("Join group")}
           </button>
           {error && <p className="mt-4 text-sm text-bad">{error}</p>}
         </>

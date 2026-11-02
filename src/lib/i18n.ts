@@ -92,6 +92,18 @@ const es: Record<string, string> = {
   "∅ Uncategorised": "∅ Sin categoría",
   "Group name, e.g. November 2026 or Lisbon trip": "Nombre del grupo, p. ej. Noviembre 2026 o Viaje a Lisboa",
   "Create group": "Crear grupo",
+  // manage members
+  "You need to be online to manage members.": "Necesitas conexión para gestionar miembros.",
+  "Some changes are still syncing. Try again in a moment.": "Aún se están sincronizando algunos cambios. Inténtalo de nuevo en un momento.",
+  "Merge {from} into {to}? All of {from}'s expenses and balance move to {to}. This can't be undone.":
+    "¿Fusionar {from} con {to}? Todos los gastos y el saldo de {from} pasan a {to}. No se puede deshacer.",
+  "Remove {name} from the group?": "¿Quitar a {name} del grupo?",
+  "Name": "Nombre",
+  "Merge into…": "Fusionar con…",
+  "Use this when the same person appears twice. Pick the member to keep.": "Úsalo cuando la misma persona aparece dos veces. Elige el miembro que se queda.",
+  "has an account": "tiene cuenta",
+  "no account yet": "sin cuenta aún",
+  "Remove from group": "Quitar del grupo",
   "You need to be online to create a group.": "Necesitas conexión para crear un grupo.",
 };
 

@@ -6,7 +6,9 @@ import { formatMoney } from "@/lib/money";
 import { sync } from "@/lib/sync";
 import { useT } from "@/lib/i18n";
 import type { useGroup } from "@/lib/useGroup";
+import type { Member } from "@/lib/db";
 import { Avatar, Sheet } from "./ui";
+import { MemberSheet } from "./MemberSheet";
 
 type GroupData = NonNullable<ReturnType<typeof useGroup>>;
 
@@ -14,6 +16,7 @@ export function MembersSheet({ data, onClose, onInvite }: { data: GroupData; onC
   const { t, lang } = useT();
   const [name, setName] = useState("");
   const [error, setError] = useState<string | null>(null);
+  const [editing, setEditing] = useState<Member | null>(null);
   const fmt = (c: number) => formatMoney(c, data.group.currency, lang);
 
   async function addPlaceholder() {
@@ -33,14 +36,14 @@ export function MembersSheet({ data, onClose, onInvite }: { data: GroupData; onC
       {data.members.map((m) => {
         const tot = data.totals.find((x) => x.memberId === m.id)!;
         return (
-          <div key={m.id} className="flex items-center gap-4 border-b border-white/10 px-4 py-4">
+          <button key={m.id} onClick={() => setEditing(m)} className="flex w-full items-center gap-4 border-b border-white/10 px-4 py-4 text-left active:bg-surface2">
             <Avatar member={m} size={48} />
             <div className="flex-1">
               <div className="text-xl">{m.name}{!m.user_id && <span className="ml-2 text-xs text-muted">{t("(no account yet)")}</span>}</div>
               <div className="text-sm text-muted">{t("Paid: {amount}", { amount: fmt(tot.paid) })}</div>
             </div>
             <div className={`text-xl font-bold ${tot.balance < 0 ? "text-bad" : tot.balance > 0 ? "text-good" : "text-muted"}`}>{fmt(tot.balance)}</div>
-          </div>
+          </button>
         );
       })}
       <div className="flex items-center gap-3 px-4 py-4">
@@ -49,6 +52,7 @@ export function MembersSheet({ data, onClose, onInvite }: { data: GroupData; onC
       </div>
       {error && <p className="px-4 text-sm text-bad">{error}</p>}
       <button onClick={onInvite} className="w-full px-4 py-4 text-left text-accent">{t("Invite people with a link or QR →")}</button>
+      {editing && <MemberSheet data={data} member={editing} onClose={() => setEditing(null)} />}
     </Sheet>
   );
 }
