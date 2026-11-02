@@ -95,3 +95,27 @@ describe("money", () => {
     expect(formatMoney(4309, "EUR", "en-US")).toBe("€43.09");
   });
 });
+
+describe("group colors", () => {
+  it("prefers colors that are not used yet", async () => {
+    const { pickGroupColor, THEMES } = await import("./themes");
+    for (let i = 0; i < 50; i++) expect(pickGroupColor(["orange"])).not.toBe("orange");
+    const allButBlue = THEMES.filter((t) => t !== "blue");
+    expect(pickGroupColor([...allButBlue])).toBe("blue");
+  });
+  it("still picks something when every color is used", async () => {
+    const { pickGroupColor, THEMES } = await import("./themes");
+    expect(THEMES).toContain(pickGroupColor([...THEMES]));
+  });
+  it("covers the whole palette and handles edge random values", async () => {
+    const { pickGroupColor, THEMES } = await import("./themes");
+    expect(pickGroupColor([], () => 0)).toBe(THEMES[0]);
+    expect(pickGroupColor([], () => 0.999999)).toBe(THEMES[THEMES.length - 1]);
+  });
+  it("falls back to orange for unknown values", async () => {
+    const { asTheme } = await import("./themes");
+    expect(asTheme(undefined)).toBe("orange");
+    expect(asTheme("hotpink")).toBe("orange");
+    expect(asTheme("teal")).toBe("teal");
+  });
+});

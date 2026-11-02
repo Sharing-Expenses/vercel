@@ -1,6 +1,6 @@
 import Dexie, { type Table } from "dexie";
 
-export type Group = { id: string; name: string; currency: string; invite_code: string; archived: boolean };
+export type Group = { id: string; name: string; currency: string; invite_code: string; archived: boolean; color?: string };
 export type Member = { id: string; group_id: string; user_id: string | null; name: string; avatar_url: string | null };
 export type Category = { id: string; group_id: string; name: string; emoji: string; sort: number };
 export type SplitModeName = "amounts" | "percent" | "shares";

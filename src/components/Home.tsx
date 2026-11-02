@@ -9,6 +9,7 @@ import { formatMoney } from "@/lib/money";
 import { saveExpenseLocal } from "@/lib/sync";
 import { useGroup } from "@/lib/useGroup";
 import { useT } from "@/lib/i18n";
+import { THEME_COLORS, asTheme } from "@/lib/themes";
 import { useAuth } from "./Providers";
 import { Avatar, SectionTitle } from "./ui";
 import { ExpenseSheet } from "./ExpenseSheet";
@@ -45,6 +46,12 @@ export function Home() {
 
   const data = useGroup(activeId);
   const me = data?.members.find((m) => m.user_id === session?.user.id);
+  const theme = asTheme(data?.group.color);
+
+  // Tint the browser/status bar to match the group.
+  useEffect(() => {
+    document.querySelector('meta[name="theme-color"]')?.setAttribute("content", THEME_COLORS[theme].header);
+  }, [theme]);
 
   const selectGroup = (id: string) => {
     setGroupId(id);
@@ -56,7 +63,7 @@ export function Home() {
   }
 
   return (
-    <div className="mx-auto flex min-h-dvh max-w-xl flex-col pb-28">
+    <div data-theme={theme} className="mx-auto flex min-h-dvh max-w-xl flex-col pb-28">
       <Header
         data={data}
         groups={groups}
@@ -127,7 +134,7 @@ function Header({
   data, groups, groupId, onSelect, onNew, onMenu, avatar,
 }: {
   data: GroupData | null | undefined;
-  groups: { id: string; name: string }[];
+  groups: { id: string; name: string; color?: string }[];
   groupId: string | null;
   onSelect: (id: string) => void;
   onNew: () => void;
@@ -137,7 +144,7 @@ function Header({
   const { t, lang } = useT();
   const maxAbs = Math.max(1, ...(data?.totals.map((t) => Math.abs(t.balance)) ?? [0]));
   return (
-    <header className="safe-top bg-gradient-to-b from-header to-[#1b1203]">
+    <header className="safe-top bg-gradient-to-b from-header to-header-end">
       <div className="flex items-center justify-between px-4 pt-3">
         <div className="rounded-full ring-2 ring-white"><Avatar member={avatar} size={36} /></div>
         <button onClick={onMenu} aria-label={t("Menu")} className="h-9 w-9 rounded-full ring-2 ring-white">•••</button>
@@ -167,7 +174,8 @@ function Header({
 
       <nav className="no-scrollbar flex gap-6 overflow-x-auto px-4 pb-3 text-lg font-semibold">
         {groups.map((g) => (
-          <button key={g.id} onClick={() => onSelect(g.id)} className={`whitespace-nowrap ${g.id === groupId ? "text-white" : "text-white/40"}`}>
+          <button key={g.id} onClick={() => onSelect(g.id)} className={`flex items-center gap-2 whitespace-nowrap ${g.id === groupId ? "text-white" : "text-white/40"}`}>
+            <span className="h-2.5 w-2.5 rounded-full" style={{ background: THEME_COLORS[asTheme(g.color)].accent }} />
             {g.name}
           </button>
         ))}

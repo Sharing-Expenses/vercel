@@ -5,6 +5,7 @@
   --surface: #1c1c1e;
   --surface-2: #2c2c2e;
   --header: #2f1d05;
+  --header-end: #1b1203;
   --accent: #f0922f;
   --accent-dim: #b8731f;
   --text: #f5f5f7;
@@ -19,6 +20,7 @@
   --color-surface: var(--surface);
   --color-surface2: var(--surface-2);
   --color-header: var(--header);
+  --color-header-end: var(--header-end);
   --color-accent: var(--accent);
   --color-accent-dim: var(--accent-dim);
   --color-muted: var(--muted);
@@ -39,3 +41,12 @@ html, body {
 .safe-bottom { padding-bottom: calc(env(safe-area-inset-bottom) + 0.5rem); }
 .no-scrollbar::-webkit-scrollbar { display: none; }
 .no-scrollbar { scrollbar-width: none; }
+
+/* Per-group color sets. Orange is the default in :root. */
+[data-theme="green"]  { --header: #0f2a12; --header-end: #08170a; --accent: #58b45f; --accent-dim: #3f8745; --owe: #7bcf80; }
+[data-theme="blue"]   { --header: #0d2238; --header-end: #07131f; --accent: #3d95f0; --accent-dim: #2c6db0; --owe: #6db3f7; }
+[data-theme="purple"] { --header: #231238; --header-end: #130a20; --accent: #a070e8; --accent-dim: #7650b0; --owe: #bf9bf5; }
+[data-theme="pink"]   { --header: #35132a; --header-end: #1d0a17; --accent: #ec6fb5; --accent-dim: #b24f88; --owe: #f59ad0; }
+[data-theme="teal"]   { --header: #0b2e2e; --header-end: #061918; --accent: #35c2b6; --accent-dim: #279087; --owe: #6ad8cf; }
+[data-theme="red"]    { --header: #35100f; --header-end: #1d0807; --accent: #ef5b4f; --accent-dim: #b4423a; --owe: #f68b82; }
+[data-theme="yellow"] { --header: #2e2805; --header-end: #191503; --accent: #e8c632; --accent-dim: #b09a22; --owe: #f3dc6a; }

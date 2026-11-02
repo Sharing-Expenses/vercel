@@ -3,6 +3,8 @@
 import { useState } from "react";
 import { supabase } from "@/lib/supabase/client";
 import { sync } from "@/lib/sync";
+import { db } from "@/lib/db";
+import { pickGroupColor } from "@/lib/themes";
 import { useT } from "@/lib/i18n";
 import { PrimaryButton, Sheet } from "./ui";
 
@@ -17,7 +19,9 @@ export function NewGroupSheet({ onClose, onCreated }: { onClose: () => void; onC
 
   async function create() {
     setBusy(true);
-    const { data, error } = await supabase().rpc("create_group", { p_name: name.trim(), p_currency: currency, p_lang: lang });
+    // Random color, preferring ones the user's other groups aren't using.
+    const color = pickGroupColor((await db.groups.toArray()).map((g) => g.color ?? "orange"));
+    const { data, error } = await supabase().rpc("create_group", { p_name: name.trim(), p_currency: currency, p_lang: lang, p_color: color });
     if (error) {
       setError(navigator.onLine ? error.message : t("You need to be online to create a group."));
       setBusy(false);
