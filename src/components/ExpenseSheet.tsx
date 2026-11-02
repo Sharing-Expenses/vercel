@@ -160,8 +160,8 @@ export function ExpenseSheet({
         {/* subject + amount on one row */}
         <div className="flex items-center gap-2">
           <input value={title} onChange={(e) => setTitle(e.target.value)} placeholder={t("What was it for?")} aria-label={t("Subject")} className="min-w-0 flex-1 rounded-xl bg-surface2 px-3 py-2.5 text-base outline-none placeholder:text-white/30" />
-          <label className="flex w-32 items-center rounded-xl bg-surface2 px-3 py-2.5">
-            <input value={amountStr} onChange={(e) => onAmount(e.target.value)} inputMode="decimal" placeholder="0,00" aria-label={t("Amount ({currency})", { currency })} className="w-full min-w-0 bg-transparent text-right text-lg font-semibold text-owe outline-none placeholder:text-white/20" />
+          <label className="flex w-[6.25rem] shrink-0 items-center rounded-xl bg-surface2 px-2.5 py-2.5">
+            <input value={amountStr} onChange={(e) => onAmount(e.target.value)} inputMode="decimal" placeholder="0,00" aria-label={t("Amount ({currency})", { currency })} className="w-full min-w-0 bg-transparent text-right text-base font-semibold tabular-nums text-owe outline-none placeholder:text-white/20" />
             <span className="ml-1 text-sm text-muted">{currencySymbol}</span>
           </label>
         </div>
