@@ -52,7 +52,7 @@ python3 -I scripts/settleup_import.py --csv "<file>.csv" --group "<Group name>" 
 
 It aborts, writing nothing, if the totals or balances differ from what Settle Up shows, if a name has no `--member` mapping, if currencies are mixed, or if a row is not Type `expense`. Do not import until pre-flight prints `pre-flight OK`. Notes on what it does:
 
-- Equal splits are stored as `split_mode = 'shares'` (1 each), unequal ones as `'amounts'`. Dates are converted with the row's timezone. Titles are trimmed. Categories are left empty (the export has none) and the group gets the standard seven.
+- Equal splits are stored as `split_mode = 'shares'` (1 each), unequal ones as `'amounts'`. Dates are converted with the row's timezone. Titles are trimmed. Categories are left empty (the export has none) and the group gets the standard categories (kept in sync with `default_categories()` in migration 0004).
 - **Half-cent rounding.** Settle Up keeps fractions of a cent (43.09 / 2 = 21.545 each); the app stores whole cents. Leftover cents are handed out in turn so nobody is favoured, which reproduces Settle Up's balances exactly. Giving every leftover cent to the first person was off by 1 cent (-97.77 instead of -97.76).
 - `created_by` for every expense is `--creator` (the export does not say who added each one), so the activity feed shows them as author. The payer on each expense is correct.
 - Non-`expense` rows (payments/transfers between members) abort the script. Handle them by hand as `is_transfer = true` rows (payer = who paid, one share for the receiver); the CSV value for that type has not been seen yet.

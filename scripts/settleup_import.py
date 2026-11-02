@@ -90,8 +90,9 @@ for e in a.expect_balance:
 if bad: fail("; ".join(bad) + "  (differences of a cent or two usually come from half-cent rounding; do not import until understood)")
 print("pre-flight OK")
 
-cats = {"es": [("Comida","🍜"),("Bebida","🍺"),("Alojamiento","🛏️"),("Transporte","🚌"),("Billetes","🎫"),("La compra","🛒"),("Alquiler y gastos","🏠")],
-        "en": [("Food","🍜"),("Drinks","🍺"),("Lodging","🛏️"),("Transport","🚌"),("Tickets","🎫"),("Groceries","🛒"),("Rent & bills","🏠")]}[a.lang]
+# Keep in sync with public.default_categories() in supabase/migrations/0004_new_categories.sql
+cats = {"es": [("La compra","🛒"),("Comida","🍜"),("Bebida","🍺"),("Casa","🏠"),("Gasolina","⛽"),("Niños","🧒"),("Seguros","🛡️"),("Streaming","📺"),("Alojamiento","🛏️"),("Billetes","🎫"),("Transporte","🚌")],
+        "en": [("Groceries","🛒"),("Food","🍜"),("Drinks","🍺"),("House","🏠"),("Fuel","⛽"),("Kid","🧒"),("Insurance","🛡️"),("Streaming","📺"),("Lodging","🛏️"),("Tickets","🎫"),("Transport","🚌")]}[a.lang]
 mrows = ",\n".join(f"  ({q(m[2])}, {q(gid)}, {q(m[0]) if m[0] else 'null'}, {q(m[1])}, " +
                    (f"(select avatar_url from public.profiles where id={q(m[0])})" if m[0] else "null") + ")" for m in members.values())
 nl = ",\n"
