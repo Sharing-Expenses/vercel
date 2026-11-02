@@ -37,6 +37,7 @@ const es: Record<string, string> = {
   "Mark paid": "Marcar pagado",
   "Total spent": "Total gastado",
   "{n} expenses": "{n} gastos",
+  "1 expense": "1 gasto",
   "Recent activity": "Actividad reciente",
   "recorded a payment": "registró un pago",
   "added an expense": "añadió un gasto",

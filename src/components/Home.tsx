@@ -77,7 +77,7 @@ export function Home() {
       {!data ? (
         <EmptyHome onNew={() => setSheet({ kind: "newGroup" })} onScan={() => setSheet({ kind: "scan" })} />
       ) : (
-        <GroupBody data={data} showAll={showAll} setShowAll={setShowAll} onEdit={(id) => setSheet({ kind: "expense", expenseId: id })} />
+        <GroupBody data={data} showAll={showAll} setShowAll={setShowAll} onEdit={(id) => setSheet({ kind: "expense", expenseId: id })} onStats={() => setSheet({ kind: "stats" })} />
       )}
 
       {data && (
@@ -95,7 +95,7 @@ export function Home() {
       )}
       {sheet?.kind === "members" && data && <MembersSheet data={data} onClose={() => setSheet(null)} onInvite={() => setSheet({ kind: "invite" })} />}
       {sheet?.kind === "invite" && data && <InviteSheet code={data.group.invite_code} name={data.group.name} onClose={() => setSheet(null)} />}
-      {sheet?.kind === "stats" && data && <StatsSheet data={data} onClose={() => setSheet(null)} />}
+      {sheet?.kind === "stats" && data && <StatsSheet data={data} meUserId={session.user.id} onClose={() => setSheet(null)} />}
       {sheet?.kind === "scan" && <ScanSheet onClose={() => setSheet(null)} />}
       {sheet?.kind === "newGroup" && (
         <NewGroupSheet
@@ -199,12 +199,13 @@ function EmptyHome({ onNew, onScan }: { onNew: () => void; onScan: () => void })
 }
 
 function GroupBody({
-  data, showAll, setShowAll, onEdit,
+  data, showAll, setShowAll, onEdit, onStats,
 }: {
   data: GroupData;
   showAll: boolean;
   setShowAll: (v: boolean) => void;
   onEdit: (id: string) => void;
+  onStats: () => void;
 }) {
   const { t, lang } = useT();
   const nameOf = (id: string) => data.members.find((m) => m.id === id)?.name ?? "?";
@@ -259,11 +260,12 @@ function GroupBody({
       ))}
 
       <SectionTitle>{t("Total spent")}</SectionTitle>
-      <div className="flex items-center gap-4 bg-surface px-4 py-4">
+      <button onClick={onStats} className="flex w-full items-center gap-4 bg-surface px-4 py-4 text-left active:bg-surface2">
         <span className="flex h-10 w-10 items-center justify-center rounded-full bg-accent font-bold text-black">$</span>
-        <span className="flex-1 text-xl">{t("{n} expenses", { n: data.spentCount })}</span>
+        <span className="flex-1 text-xl">{data.spentCount === 1 ? t("1 expense") : t("{n} expenses", { n: data.spentCount })}</span>
         <span className="text-xl font-semibold text-owe">{fmt(data.totalSpent)}</span>
-      </div>
+        <span className="text-xl text-muted">›</span>
+      </button>
 
       <SectionTitle>{t("Recent activity")}</SectionTitle>
       {data.expenses.slice(0, 5).map((e) => {
