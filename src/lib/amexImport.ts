@@ -1,5 +1,8 @@
 /** Import of an American Express activity export (`Fecha,Descripción,Importe`) as shared expenses. */
 
+import type { Expense, ExpenseShare } from "./db";
+import { splitEqually } from "./split";
+
 export type AmexRow = {
   /** yyyy-mm-dd */
   date: string;
@@ -116,4 +119,32 @@ export function partitionRows(rows: AmexRow[], knownKeys: Set<string>): { fresh:
   const duplicates: AmexRow[] = [];
   for (const r of rows) (knownKeys.has(r.key) ? duplicates : fresh).push(r);
   return { fresh, duplicates };
+}
+
+export type ImportContext = {
+  groupId: string;
+  /** Member whose card this is; pays every imported expense. */
+  ownerMemberId: string;
+  /** Every member of the group: each gets an equal share. */
+  memberIds: string[];
+  categoryId: string | null;
+  userId: string;
+};
+
+/** One imported charge as an expense paid by the owner, split equally, flagged for review. */
+export function buildImportedExpense(row: AmexRow, ctx: ImportContext): { expense: Expense; shares: ExpenseShare[] } {
+  if (!ctx.memberIds.includes(ctx.ownerMemberId)) throw new Error("owner is not a member of the group");
+  const id = crypto.randomUUID();
+  const [y, m, d] = row.date.split("-").map(Number);
+  const now = new Date().toISOString();
+  const expense: Expense = {
+    id, group_id: ctx.groupId, title: row.title, amount_cents: row.cents, paid_by: ctx.ownerMemberId,
+    category_id: ctx.categoryId, spent_at: new Date(y, m - 1, d, 12).toISOString(), split_mode: "shares",
+    is_transfer: false, created_by: ctx.userId, updated_at: now, deleted_at: null,
+    needs_review: true, import_key: row.key,
+  };
+  const shares = splitEqually(row.cents, ctx.memberIds).map((s) => ({
+    expense_id: id, member_id: s.memberId, cents: s.cents, input_value: 1,
+  }));
+  return { expense, shares };
 }

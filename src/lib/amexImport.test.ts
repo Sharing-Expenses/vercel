@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { decodeCsv, ImportFormatError, parseAmexCsv, partitionRows } from "./amexImport";
+import { buildImportedExpense, decodeCsv, ImportFormatError, parseAmexCsv, partitionRows } from "./amexImport";
 
 const HEADER = "Fecha,Descripción,Importe";
 const csv = (...rows: string[]) => [HEADER, ...rows].join("\n");
@@ -76,5 +76,34 @@ describe("partitionRows", () => {
     const { fresh, duplicates } = partitionRows(rows, new Set([rows[0].key]));
     expect(duplicates.map((r) => r.title)).toEqual(["A"]);
     expect(fresh.map((r) => r.title)).toEqual(["B"]);
+  });
+});
+
+describe("buildImportedExpense", () => {
+  const row = { date: "2026-10-26", title: "SHOP", cents: 4309, key: "2026-10-26|SHOP|4309|1" };
+  const ctx = { groupId: "g", ownerMemberId: "a", memberIds: ["a", "b"], categoryId: null, userId: "u" };
+
+  it("builds a flagged, equally split expense paid by the owner", () => {
+    const { expense, shares } = buildImportedExpense(row, ctx);
+    expect(expense).toMatchObject({
+      group_id: "g", paid_by: "a", amount_cents: 4309, split_mode: "shares", needs_review: true,
+      import_key: row.key, is_transfer: false, title: "SHOP", created_by: "u", deleted_at: null,
+    });
+    expect(shares.map((s) => s.cents)).toEqual([2155, 2154]);
+    expect(shares.every((s) => s.input_value === 1 && s.expense_id === expense.id)).toBe(true);
+  });
+
+  it("stores the date at 12:00 local", () => {
+    const d = new Date(buildImportedExpense(row, ctx).expense.spent_at);
+    expect([d.getFullYear(), d.getMonth(), d.getDate(), d.getHours()]).toEqual([2026, 9, 26, 12]);
+  });
+
+  it("refuses an owner who is not a member", () => {
+    expect(() => buildImportedExpense(row, { ...ctx, ownerMemberId: "z" })).toThrow("owner is not a member of the group");
+  });
+
+  it("works for a one-member group", () => {
+    const { shares } = buildImportedExpense(row, { ...ctx, memberIds: ["a"] });
+    expect(shares).toMatchObject([{ member_id: "a", cents: 4309 }]);
   });
 });
