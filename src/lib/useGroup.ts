@@ -13,7 +13,7 @@ export function useGroup(groupId: string | null) {
     const [members, categories, expenses] = await Promise.all([
       db.members.where("group_id").equals(groupId).toArray(),
       db.categories.where("group_id").equals(groupId).sortBy("sort"),
-      db.expenses.where("group_id").equals(groupId).toArray(),
+      db.expenses.where("group_id").equals(groupId).filter((e) => !e.deleted_at).toArray(),
     ]);
     const ids = new Set(expenses.map((e) => e.id));
     const allShares = await db.shares.toArray();

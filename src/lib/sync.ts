@@ -1,4 +1,5 @@
 import { db, type Expense, type ExpenseShare } from "./db";
+import { needsTombstone } from "./outbox";
 import { supabase } from "./supabase/client";
 
 let running: Promise<void> | null = null;
@@ -43,6 +44,10 @@ async function pushOutbox() {
         .update({ deleted_at: new Date().toISOString() })
         .eq("id", item.expense_id);
       if (error) throw error;
+      if ((await db.expenses.get(item.expense_id))?.deleted_at) {
+        await db.expenses.delete(item.expense_id);
+        await db.shares.where("expense_id").equals(item.expense_id).delete();
+      }
     }
     await db.outbox.delete(item.id!);
   }
@@ -105,9 +110,16 @@ export async function markReviewedLocal(expenseId: string) {
 
 export async function deleteExpenseLocal(expenseId: string) {
   await db.transaction("rw", [db.expenses, db.shares, db.outbox], async () => {
-    await db.expenses.delete(expenseId);
-    await db.shares.where("expense_id").equals(expenseId).delete();
-    await db.outbox.where("expense_id").equals(expenseId).delete();
+    const expense = await db.expenses.get(expenseId);
+    const pending = await db.outbox.where("expense_id").equals(expenseId).toArray();
+    if (expense && needsTombstone(expense, pending.some((o) => o.kind === "upsert_expense"))) {
+      // Keep the queued insert so the server records the import key; the delete follows it. Hidden meanwhile.
+      await db.expenses.put({ ...expense, deleted_at: new Date().toISOString() });
+    } else {
+      await db.expenses.delete(expenseId);
+      await db.shares.where("expense_id").equals(expenseId).delete();
+      await db.outbox.where("expense_id").equals(expenseId).delete();
+    }
     await db.outbox.add({ kind: "delete_expense", expense_id: expenseId });
   });
   void sync();

@@ -253,9 +253,9 @@ function GroupBody({
             <button onClick={() => !e.is_transfer && onEdit(e.id)} className="flex min-w-0 flex-1 items-center gap-4 px-4 py-4 text-left">
               <Avatar member={payer} size={48} />
               <div className="min-w-0 flex-1">
-                <div className="truncate text-xl">
-                  {cat?.emoji} {e.title}
-                  {e.needs_review && <span className="ml-2 rounded-full bg-yellow-300 px-2 py-0.5 align-middle text-xs font-semibold text-black">{t("Imported")}</span>}
+                <div className="flex items-center gap-2 text-xl">
+                  {e.needs_review && <span className="shrink-0 rounded-full bg-yellow-300 px-2 py-0.5 text-xs font-semibold text-black">{t("Imported")}</span>}
+                  <span className="truncate">{cat?.emoji} {e.title}</span>
                 </div>
                 <div className="text-sm text-muted">{new Date(e.spent_at).toLocaleDateString(lang)} {data.pending.has(e.id) && `· ${t("syncing…")}`}</div>
                 <div className="text-sm text-muted"><b className="text-white/80">{payer?.name}</b> {e.is_transfer ? t("paid back") : t("paid")}</div>
