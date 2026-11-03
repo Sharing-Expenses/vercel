@@ -17,6 +17,10 @@ export type Expense = {
   created_by: string;
   updated_at: string;
   deleted_at: string | null;
+  /** Imported from a bank CSV and not yet checked by a person. */
+  needs_review?: boolean;
+  /** Identifies the CSV row this came from, so re-importing never duplicates it. */
+  import_key?: string | null;
 };
 export type ExpenseShare = { expense_id: string; member_id: string; cents: number; input_value: number | null };
 export type OutboxItem = { id?: number; kind: "upsert_expense" | "delete_expense"; expense_id: string };
