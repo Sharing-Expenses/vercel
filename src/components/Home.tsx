@@ -6,7 +6,7 @@ import { useLiveQuery } from "dexie-react-hooks";
 import { db, type Expense } from "@/lib/db";
 import { supabase } from "@/lib/supabase/client";
 import { formatMoney } from "@/lib/money";
-import { saveExpenseLocal } from "@/lib/sync";
+import { deleteExpenseLocal, markReviewedLocal, saveExpenseLocal } from "@/lib/sync";
 import { useGroup } from "@/lib/useGroup";
 import { useT } from "@/lib/i18n";
 import { THEME_COLORS, asTheme } from "@/lib/themes";
@@ -213,7 +213,13 @@ function GroupBody({
   const nameOf = (id: string) => data.members.find((m) => m.id === id)?.name ?? "?";
   const memberOf = (id: string) => data.members.find((m) => m.id === id);
   const fmt = (c: number) => formatMoney(c, data.group.currency, lang);
+  const toReview = data.expenses.filter((e) => e.needs_review && !e.is_transfer).length;
   const shown = useMemo(() => (showAll ? data.expenses : data.expenses.slice(0, 3)), [showAll, data.expenses]);
+
+  async function remove(id: string) {
+    if (!confirm(t("Delete this expense?"))) return;
+    await deleteExpenseLocal(id);
+  }
 
   async function settle(from: string, to: string, cents: number) {
     if (!confirm(t("Record {amount} paid from {from} to {to}?", { amount: fmt(cents), from: nameOf(from), to: nameOf(to) }))) return;
@@ -227,21 +233,42 @@ function GroupBody({
 
   return (
     <div>
-      <SectionTitle>{t("Transactions")}</SectionTitle>
+      <SectionTitle
+        right={
+          toReview > 0 && (
+            <button onClick={() => setShowAll(true)} className="rounded-full bg-yellow-300 px-3 py-0.5 text-xs font-semibold text-black">
+              {t("{n} to review", { n: toReview })}
+            </button>
+          )
+        }
+      >
+        {t("Transactions")}
+      </SectionTitle>
       {data.expenses.length === 0 && <p className="bg-surface px-4 py-6 text-center text-muted">{t("No expenses yet. Tap + to add the first one.")}</p>}
       {shown.map((e) => {
         const payer = memberOf(e.paid_by);
         const cat = data.categories.find((c) => c.id === e.category_id);
         return (
-          <button key={e.id} onClick={() => !e.is_transfer && onEdit(e.id)} className="flex w-full items-center gap-4 border-b border-white/10 bg-surface px-4 py-4 text-left active:bg-surface2">
-            <Avatar member={payer} size={48} />
-            <div className="min-w-0 flex-1">
-              <div className="truncate text-xl">{cat?.emoji} {e.title}</div>
-              <div className="text-sm text-muted">{new Date(e.spent_at).toLocaleDateString(lang)} {data.pending.has(e.id) && `· ${t("syncing…")}`}</div>
-              <div className="text-sm text-muted"><b className="text-white/80">{payer?.name}</b> {e.is_transfer ? t("paid back") : t("paid")}</div>
-            </div>
-            <div className="text-xl font-semibold text-owe">{fmt(e.amount_cents)}</div>
-          </button>
+          <div key={e.id} className="flex items-center border-b border-white/10 bg-surface active:bg-surface2">
+            <button onClick={() => !e.is_transfer && onEdit(e.id)} className="flex min-w-0 flex-1 items-center gap-4 px-4 py-4 text-left">
+              <Avatar member={payer} size={48} />
+              <div className="min-w-0 flex-1">
+                <div className="truncate text-xl">
+                  {cat?.emoji} {e.title}
+                  {e.needs_review && <span className="ml-2 rounded-full bg-yellow-300 px-2 py-0.5 align-middle text-xs font-semibold text-black">{t("Imported")}</span>}
+                </div>
+                <div className="text-sm text-muted">{new Date(e.spent_at).toLocaleDateString(lang)} {data.pending.has(e.id) && `· ${t("syncing…")}`}</div>
+                <div className="text-sm text-muted"><b className="text-white/80">{payer?.name}</b> {e.is_transfer ? t("paid back") : t("paid")}</div>
+              </div>
+              <div className="text-xl font-semibold text-owe">{fmt(e.amount_cents)}</div>
+            </button>
+            {e.needs_review && (
+              <div className="flex gap-2 pr-3">
+                <button onClick={() => void markReviewedLocal(e.id)} aria-label={t("Mark as reviewed")} className="h-9 w-9 rounded-full bg-surface2 text-accent">✓</button>
+                <button onClick={() => remove(e.id)} aria-label={t("Delete")} className="h-9 w-9 rounded-full bg-surface2">🗑</button>
+              </div>
+            )}
+          </div>
         );
       })}
       {data.expenses.length > 3 && (

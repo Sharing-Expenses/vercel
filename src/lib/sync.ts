@@ -95,6 +95,14 @@ export async function saveExpenseLocal(expense: Expense, shares: ExpenseShare[])
   void sync();
 }
 
+/** Clear the "to review" flag of an imported expense, keeping everything else as it is. */
+export async function markReviewedLocal(expenseId: string) {
+  const expense = await db.expenses.get(expenseId);
+  if (!expense) return;
+  const shares = await db.shares.where("expense_id").equals(expenseId).toArray();
+  await saveExpenseLocal({ ...expense, needs_review: false, updated_at: new Date().toISOString() }, shares);
+}
+
 export async function deleteExpenseLocal(expenseId: string) {
   await db.transaction("rw", [db.expenses, db.shares, db.outbox], async () => {
     await db.expenses.delete(expenseId);
