@@ -9,6 +9,7 @@ import { deleteExpenseLocal, saveExpenseLocal } from "@/lib/sync";
 import { useT } from "@/lib/i18n";
 import type { useGroup } from "@/lib/useGroup";
 import { Avatar, PrimaryButton, Sheet } from "./ui";
+import { MoveExpenseSheet } from "./MoveExpenseSheet";
 
 type GroupData = NonNullable<ReturnType<typeof useGroup>>;
 
@@ -54,6 +55,7 @@ export function ExpenseSheet({
   const me = data.members.find((m) => m.user_id === meUserId);
   const currency = data.group.currency;
 
+  const [moving, setMoving] = useState(false);
   const [title, setTitle] = useState(existing?.title ?? "");
   const [amountStr, setAmountStr] = useState(existing ? centsToStr(existing.amount_cents) : "");
   const [paidBy, setPaidBy] = useState(existing?.paid_by ?? me?.id ?? data.members[0]?.id);
@@ -241,6 +243,13 @@ export function ExpenseSheet({
           <span className="text-xs text-muted">{t("Date and time")}</span>
           <input type="datetime-local" value={date} onChange={(e) => setDate(e.target.value)} className="rounded-lg bg-surface2 px-2 py-1.5 text-base outline-none [color-scheme:dark]" />
         </label>
+
+        {existing && !existing.is_transfer && (
+          <button onClick={() => setMoving(true)} className="w-full rounded-xl bg-surface2 py-2.5 text-base text-accent">{t("Move to another group")}</button>
+        )}
+        {moving && existing && (
+          <MoveExpenseSheet data={data} expense={existing} onClose={() => setMoving(false)} onMoved={onClose} />
+        )}
       </div>
     </Sheet>
   );

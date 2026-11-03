@@ -1,4 +1,5 @@
 import { db, type Expense, type ExpenseShare } from "./db";
+import type { MovePlan } from "./moveExpense";
 import { needsTombstone } from "./outbox";
 import { supabase } from "./supabase/client";
 
@@ -123,4 +124,13 @@ export async function deleteExpenseLocal(expenseId: string) {
     await db.outbox.add({ kind: "delete_expense", expense_id: expenseId });
   });
   void sync();
+}
+
+/** Move a synced expense to another group on the server (needs a connection), then refresh the local copy. */
+export async function moveExpenseRemote(expenseId: string, targetGroupId: string, plan: Extract<MovePlan, { ok: true }>) {
+  const { error } = await supabase().rpc("move_expense", {
+    p_expense_id: expenseId, p_target_group: targetGroupId, p_member_map: plan.memberMap, p_category_id: plan.categoryId,
+  });
+  if (error) throw error;
+  await sync();
 }
