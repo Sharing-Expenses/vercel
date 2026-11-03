@@ -118,6 +118,7 @@ const es: Record<string, string> = {
   "Offline: duplicates are filtered after the next sync.": "Sin conexión: los duplicados se filtran tras la próxima sincronización.",
   "… {n} more": "… {n} más",
   "Imported": "Importado",
+  "Save and mark as reviewed": "Guardar y marcar como revisado",
   "Mark as reviewed": "Marcar como revisado",
   "Delete": "Eliminar",
   "{n} to review": "{n} por revisar",

@@ -128,6 +128,7 @@ export function ExpenseSheet({
       id, group_id: data.group.id, title: title.trim(), amount_cents: total, paid_by: paidBy!, category_id: categoryId,
       spent_at: new Date(date).toISOString(), split_mode: mode, is_transfer: false,
       created_by: existing?.created_by ?? meUserId, updated_at: new Date().toISOString(), deleted_at: null,
+      needs_review: false, import_key: existing?.import_key ?? null,
     };
     await saveExpenseLocal(
       expense,
@@ -162,7 +163,7 @@ export function ExpenseSheet({
       }
       footer={
         <div className="px-4 pb-1 pt-2.5">
-          <PrimaryButton onClick={save} disabled={!canSave} className="!py-3">{t("Save")}</PrimaryButton>
+          <PrimaryButton onClick={save} disabled={!canSave} className="!py-3">{existing?.needs_review ? t("Save and mark as reviewed") : t("Save")}</PrimaryButton>
         </div>
       }
     >
