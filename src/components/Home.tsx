@@ -17,11 +17,12 @@ import { MembersSheet } from "./MembersSheet";
 import { InviteSheet } from "./InviteSheet";
 import { ScanSheet } from "./ScanSheet";
 import { StatsSheet } from "./StatsSheet";
+import { ImportSheet } from "./ImportSheet";
 import { NewGroupSheet } from "./NewGroupSheet";
 
 type SheetState =
   | { kind: "expense"; expenseId?: string }
-  | { kind: "members" | "invite" | "scan" | "stats" | "newGroup" | "menu" }
+  | { kind: "members" | "invite" | "scan" | "stats" | "import" | "newGroup" | "menu" }
   | null;
 
 export function Home() {
@@ -96,6 +97,7 @@ export function Home() {
       {sheet?.kind === "members" && data && <MembersSheet data={data} onClose={() => setSheet(null)} onInvite={() => setSheet({ kind: "invite" })} />}
       {sheet?.kind === "invite" && data && <InviteSheet code={data.group.invite_code} name={data.group.name} onClose={() => setSheet(null)} />}
       {sheet?.kind === "stats" && data && <StatsSheet data={data} meUserId={session.user.id} onClose={() => setSheet(null)} />}
+      {sheet?.kind === "import" && data && <ImportSheet data={data} meUserId={session.user.id} onClose={() => setSheet(null)} />}
       {sheet?.kind === "scan" && <ScanSheet onClose={() => setSheet(null)} />}
       {sheet?.kind === "newGroup" && (
         <NewGroupSheet
@@ -289,7 +291,7 @@ function MenuSheet({
 }: {
   hasGroup: boolean;
   onClose: () => void;
-  go: (k: "members" | "invite" | "scan" | "stats" | "newGroup") => void;
+  go: (k: "members" | "invite" | "scan" | "stats" | "import" | "newGroup") => void;
   onArchive: () => void;
   onSignOut: () => void;
 }) {
@@ -299,6 +301,7 @@ function MenuSheet({
       ? ([
           [t("Members & balances"), () => go("members")],
           [t("Spending by category"), () => go("stats")],
+          [t("Import expenses"), () => go("import")],
           [t("Invite (link / QR)"), () => go("invite")],
         ] as [string, () => void][])
       : []),

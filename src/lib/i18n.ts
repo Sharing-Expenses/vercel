@@ -106,6 +106,20 @@ const es: Record<string, string> = {
   "no account yet": "sin cuenta aún",
   "Remove from group": "Quitar del grupo",
   "You need to be online to create a group.": "Necesitas conexión para crear un grupo.",
+  // import expenses
+  "Import expenses": "Importar gastos",
+  "Import {n} expenses": "Importar {n} gastos",
+  "Choose the CSV exported from American Express (Fecha, Descripción, Importe).": "Elige el CSV exportado de American Express (Fecha, Descripción, Importe).",
+  "Whose card is this?": "¿De quién es la tarjeta?",
+  "Paid by this member, split equally between all members.": "Lo paga este miembro, a partes iguales entre todos los miembros.",
+  "This group has no members to import for.": "Este grupo no tiene miembros para quien importar.",
+  "{n} to import · {s} skipped (negative or zero) · {d} already imported": "{n} para importar · {s} omitidos (negativos o cero) · {d} ya importados",
+  "Unreadable rows (line numbers): {lines}": "Filas ilegibles (números de línea): {lines}",
+  "Offline: duplicates are filtered after the next sync.": "Sin conexión: los duplicados se filtran tras la próxima sincronización.",
+  "… {n} more": "… {n} más",
+  "Could not read this file.": "No se pudo leer este archivo.",
+  "The file is empty": "El archivo está vacío",
+  "Expected the header Fecha,Descripción,Importe": "Se esperaba la cabecera Fecha,Descripción,Importe",
 };
 
 const dictionaries: Record<Lang, Record<string, string>> = { en: {}, es };
