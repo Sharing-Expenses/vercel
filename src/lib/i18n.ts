@@ -33,6 +33,7 @@ const es: Record<string, string> = {
   "Show all": "Mostrar todo",
   "Show less": "Mostrar menos",
   "Debts": "Deudas",
+  "Paid": "Pagado",
   "Everyone is settled up 🎉": "Todo está saldado 🎉",
   "Mark paid": "Marcar pagado",
   "Total spent": "Total gastado",

@@ -214,6 +214,7 @@ function GroupBody({
   const memberOf = (id: string) => data.members.find((m) => m.id === id);
   const fmt = (c: number) => formatMoney(c, data.group.currency, lang);
   const toReview = data.expenses.filter((e) => e.needs_review && !e.is_transfer).length;
+  const payments = data.expenses.filter((e) => e.is_transfer);
   const shown = useMemo(() => (showAll ? data.expenses : data.expenses.slice(0, 3)), [showAll, data.expenses]);
 
   async function remove(id: string) {
@@ -289,6 +290,25 @@ function GroupBody({
           <button onClick={() => settle(d.from, d.to, d.cents)} className="rounded-full bg-surface2 px-4 py-2 text-sm text-accent">{t("Mark paid")}</button>
         </div>
       ))}
+
+      {payments.length > 0 && (
+        <>
+          <SectionTitle>{t("Paid")}</SectionTitle>
+          {payments.map((e) => {
+            const to = e.shares[0]?.memberId;
+            return (
+              <div key={e.id} className="flex items-center gap-3 border-b border-white/10 bg-surface px-4 py-3">
+                <Avatar member={memberOf(e.paid_by)} size={40} />
+                <div className="flex-1">
+                  <div>{nameOf(e.paid_by)} → {to ? nameOf(to) : "?"}</div>
+                  <div className="text-sm text-muted">{new Date(e.spent_at).toLocaleDateString(lang)}</div>
+                </div>
+                <div className="font-semibold text-accent">{fmt(e.amount_cents)}</div>
+              </div>
+            );
+          })}
+        </>
+      )}
 
       <SectionTitle>{t("Total spent")}</SectionTitle>
       <button onClick={onStats} className="flex w-full items-center gap-4 bg-surface px-4 py-4 text-left active:bg-surface2">
