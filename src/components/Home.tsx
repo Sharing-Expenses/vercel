@@ -85,7 +85,7 @@ export function Home() {
         <button
           onClick={() => setSheet({ kind: "expense" })}
           aria-label={t("Add expense")}
-          className="safe-bottom fixed bottom-4 left-1/2 z-30 h-16 w-16 -translate-x-1/2 rounded-full bg-accent text-4xl font-light text-black shadow-lg active:scale-95"
+          className="fixed bottom-[calc(env(safe-area-inset-bottom)+1rem)] left-1/2 z-30 flex h-16 w-16 -translate-x-1/2 items-center justify-center rounded-full bg-accent pb-1 text-4xl font-light leading-none text-black shadow-lg active:scale-95"
         >
           +
         </button>
