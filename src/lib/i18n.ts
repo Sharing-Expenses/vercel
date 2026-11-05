@@ -51,6 +51,7 @@ const es: Record<string, string> = {
   "Invite (link / QR)": "Invitar (enlace / QR)",
   "Scan a QR to join": "Escanear QR para unirse",
   "New group": "Nuevo grupo",
+  "\"{name}\" is already marked as paid. Move the expense there anyway?": "\"{name}\" ya está marcado como pagado. ¿Mover el gasto de todos modos?",
   "Reopen this group": "Reabrir este grupo",
   "Mark group as paid": "Marcar grupo como pagado",
   "Archive this group": "Archivar este grupo",

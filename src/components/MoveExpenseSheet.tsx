@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useLiveQuery } from "dexie-react-hooks";
-import { db, type Expense } from "@/lib/db";
+import { db, type Expense, type Group } from "@/lib/db";
 import { planMove, type MovePlan } from "@/lib/moveExpense";
 import { moveExpenseRemote } from "@/lib/sync";
 import type { useGroup } from "@/lib/useGroup";
@@ -37,11 +37,12 @@ export function MoveExpenseSheet({ data, expense, onClose, onMoved }: { data: Gr
   const why = (plan: MovePlan) =>
     plan.ok ? "" : plan.reason === "members" ? t("Different members") : plan.reason === "category" ? t("Category missing there") : t("Already imported there");
 
-  async function move(groupId: string, plan: Extract<MovePlan, { ok: true }>) {
+  async function move(group: Group, plan: Extract<MovePlan, { ok: true }>) {
+    if (group.closed && !confirm(t("\"{name}\" is already marked as paid. Move the expense there anyway?", { name: group.name }))) return;
     setBusy(true);
     setError(null);
     try {
-      await moveExpenseRemote(expense.id, groupId, plan);
+      await moveExpenseRemote(expense.id, group.id, plan);
       onMoved();
     } catch {
       setError(t("Could not move the expense."));
@@ -60,11 +61,11 @@ export function MoveExpenseSheet({ data, expense, onClose, onMoved }: { data: Gr
           <button
             key={group.id}
             disabled={!plan.ok || !online || pending || busy}
-            onClick={() => plan.ok && void move(group.id, plan)}
+            onClick={() => plan.ok && void move(group, plan)}
             className="flex w-full items-center justify-between rounded-xl bg-surface2 px-4 py-3.5 text-left disabled:opacity-40"
           >
             <span className="text-lg">{group.name}</span>
-            {!plan.ok && <span className="text-sm text-muted">{why(plan)}</span>}
+            {plan.ok ? group.closed && <span className="text-sm text-muted">{t("Paid")}</span> : <span className="text-sm text-muted">{why(plan)}</span>}
           </button>
         ))}
       </div>
