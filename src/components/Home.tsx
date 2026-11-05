@@ -83,7 +83,10 @@ export function Home() {
 
       {data && (
         <button
-          onClick={() => setSheet({ kind: "expense" })}
+          onClick={() => {
+            if (data.group.closed && !confirm(t("\"{name}\" is already marked as paid. Add an expense to it anyway?", { name: data.group.name }))) return;
+            setSheet({ kind: "expense" });
+          }}
           aria-label={t("Add expense")}
           className="fixed bottom-[calc(env(safe-area-inset-bottom)+1rem)] left-1/2 z-30 flex h-16 w-16 -translate-x-1/2 items-center justify-center rounded-full bg-accent pb-1 text-4xl font-light leading-none text-black shadow-lg active:scale-95"
         >
@@ -111,6 +114,12 @@ export function Home() {
       {sheet?.kind === "menu" && (
         <MenuSheet
           hasGroup={!!data}
+          closed={!!data?.group.closed}
+          onToggleClosed={async () => {
+            if (!data) return;
+            await setClosed(data.group.id, !data.group.closed);
+            setSheet(null);
+          }}
           onClose={() => setSheet(null)}
           go={(kind) => setSheet({ kind })}
           onArchive={async () => {
@@ -200,6 +209,12 @@ function EmptyHome({ onNew, onScan }: { onNew: () => void; onScan: () => void })
   );
 }
 
+/** Closing is best effort: it needs a connection, and a failure only means no warning later. */
+async function setClosed(groupId: string, closed: boolean) {
+  const { error } = await supabase().from("groups").update({ closed }).eq("id", groupId);
+  if (!error) await db.groups.update(groupId, { closed });
+}
+
 function GroupBody({
   data, showAll, setShowAll, onEdit, onStats,
 }: {
@@ -230,6 +245,7 @@ function GroupBody({
       spent_at: new Date().toISOString(), split_mode: "amounts", is_transfer: true, created_by: "", updated_at: new Date().toISOString(), deleted_at: null,
     };
     await saveExpenseLocal(expense, [{ expense_id: id, member_id: to, cents, input_value: null }]);
+    if (data.debts.length === 1) await setClosed(data.group.id, true);
   }
 
   return (
@@ -336,9 +352,11 @@ function GroupBody({
 }
 
 function MenuSheet({
-  hasGroup, onClose, go, onArchive, onSignOut,
+  hasGroup, closed, onToggleClosed, onClose, go, onArchive, onSignOut,
 }: {
   hasGroup: boolean;
+  closed: boolean;
+  onToggleClosed: () => void;
   onClose: () => void;
   go: (k: "members" | "invite" | "scan" | "stats" | "import" | "newGroup") => void;
   onArchive: () => void;
@@ -356,6 +374,7 @@ function MenuSheet({
       : []),
     [t("Scan a QR to join"), () => go("scan")],
     [t("New group"), () => go("newGroup")],
+    ...(hasGroup ? ([[closed ? t("Reopen this group") : t("Mark group as paid"), onToggleClosed]] as [string, () => void][]) : []),
     ...(hasGroup ? ([[t("Archive this group"), onArchive, true]] as [string, () => void, boolean][]) : []),
     [t("Sign out"), onSignOut, true],
   ];
